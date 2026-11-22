@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>미국 대륙횡단철도 노선 지도</title>
+  <style>
+    :root {
+      --bg-app: #f1f5f9;
+      --bg-panel: #ffffff;
+      --bg-subtle: #f8fafc;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --primary: #2563eb;
+      --map-bg: #dbeafe;
+      --land-fill: #f8fafc;
+      --land-stroke: #cbd5e1;
+      --state-stroke: #e2e8f0;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.12);
+      --radius-lg: 14px;
+      --radius-md: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 20;
+      box-shadow: var(--shadow-sm);
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #0f172a;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.25;
+    }
+
+    .brand p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .tabs {
+      display: flex;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-outline:hover {
+      background: #f8fafc;
+    }
+
+    /* Main Layout */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Sidebar Panel */
+    .sidebar {
+      width: 410px;
+      max-width: 100%;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .route-list-section {
+      padding: 14px;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      flex-shrink: 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .badge-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+
+    .text-btn {
+      background: none;
+      border: none;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .text-btn:hover {
+      color: var(--text-main);
+    }
+
+    .route-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 230px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .route-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .route-item:hover {
+      background: #ffffff;
+      border-color: var(--border-color);
+    }
+
+    .route-item.selected {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    }
+
+    .route-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      padding-right: 8px;
+    }
+
+    .color-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+    }
+
+    .route-item-info {
+      min-width: 0;
+    }
+
+    .route-item-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .route-item-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 34px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .2s;
+      border-radius: 999px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    input:checked + .slider {
+      background-color: #1e293b;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    /* Detail Card Area */
+    .detail-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .detail-header {
+      margin-bottom: 12px;
+    }
+
+    .detail-eng {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .detail-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.3;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .meta-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 9px 10px;
+    }
+
+    .meta-label {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    .meta-val {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.3;
+    }
+
+    .summary-box {
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #334155;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 11px 12px;
+      margin-bottom: 16px;
+    }
+
+    .sub-heading {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 18px;
+      margin-bottom: 16px;
+    }
+
+    .timeline-line {
+      position: absolute;
+      left: 5px;
+      top: 6px;
+      bottom: 6px;
+      width: 2.5px;
+      border-radius: 2px;
+      opacity: 0.45;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -17px;
+      top: 3px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2.5px solid #2563eb;
+      transition: transform 0.15s;
+    }
+
+    .timeline-item:hover .timeline-dot {
+      transform: scale(1.3);
+    }
+
+    .timeline-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .timeline-item:hover .timeline-title {
+      color: var(--primary);
+    }
+
+    .timeline-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .highlights-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .highlights-list li {
+      font-size: 12px;
+      color: #334155;
+      line-height: 1.45;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .bullet {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    /* Map Viewport */
+    .map-area {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at 50% 45%, #eff6ff 0%, #dbeafe 65%, #bfdbfe 100%);
+      overflow: hidden;
+      user-select: none;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    .map-area:active {
+      cursor: grabbing;
+    }
+
+    #us-rail-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* SVG Elements Styling */
+    .country-neighbor {
+      fill: #e2e8f0;
+      stroke: #cbd5e1;
+      stroke-width: 1;
+    }
+
+    .us-mainland {
+      fill: #ffffff;
+      stroke: #94a3b8;
+      stroke-width: 1.6;
+      filter: drop-shadow(0 6px 14px rgba(15, 23, 42, 0.12));
+    }
+
+    .state-grid {
+      fill: none;
+      stroke: #e2e8f0;
+      stroke-width: 0.9;
+      stroke-linejoin: round;
+    }
+
+    .river-line {
+      fill: none;
+      stroke: #93c5fd;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      opacity: 0.75;
+    }
+
+    .mountain-label {
+      font-size: 10px;
+      font-weight: 700;
+      fill: #94a3b8;
+      letter-spacing: 0.18em;
+      pointer-events: none;
+    }
+
+    .ocean-label {
+      font-size: 11px;
+      font-weight: 700;
+      fill: #60a5fa;
+      letter-spacing: 0.15em;
+      pointer-events: none;
+    }
+
+    .rail-casing {
+      fill: none;
+      stroke: #ffffff;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .rail-path {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      cursor: pointer;
+      transition: opacity 0.25s ease, stroke-width 0.2s ease;
+    }
+
+    .rail-path:hover {
+      opacity: 1 !important;
+    }
+
+    /* Animated train flow dash on selected route */
+    @keyframes trainFlow {
+      to {
+        stroke-dashoffset: -36;
+      }
+    }
+
+    .train-flow-overlay {
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 2.2;
+      stroke-dasharray: 4 14;
+      stroke-linecap: round;
+      pointer-events: none;
+      animation: trainFlow 1.4s linear infinite;
+      opacity: 0.9;
+    }
+
+    .station-dot {
+      cursor: pointer;
+      transition: r 0.15s ease;
+    }
+
+    .station-label-bg {
+      fill: rgba(255, 255, 255, 0.88);
+      rx: 3;
+      ry: 3;
+      pointer-events: none;
+    }
+
+    .station-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      fill: #1e293b;
+      pointer-events: none;
+    }
+
+    .station-label.minor {
+      font-size: 9px;
+      font-weight: 600;
+      fill: #475569;
+    }
+
+    @keyframes spikePulse {
+      0% { r: 6; opacity: 0.85; }
+      100% { r: 18; opacity: 0; }
+    }
+
+    .spike-ring {
+      fill: #f59e0b;
+      animation: spikePulse 1.8s ease-out infinite;
+      pointer-events: none;
+    }
+
+    /* Floating Map Controls */
+    .map-controls {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 15;
+    }
+
+    .map-ctrl-btn {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: var(--shadow-sm);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .map-ctrl-btn:hover {
+      background: #ffffff;
+      color: var(--primary);
+    }
+
+    /* Map Legend & Tooltip */
+    .map-legend {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(4px);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 9px 14px;
+      font-size: 11.5px;
+      color: #334155;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      z-index: 15;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .floating-tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(15, 23, 42, 0.94);
+      color: #f8fafc;
+      padding: 7px 11px;
+      border-radius: 8px;
+      font-size: 12px;
+      box-shadow: var(--shadow-md);
+      z-index: 30;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+      max-width: 240px;
+    }
+
+    .floating-tooltip strong {
+      display: block;
+      font-size: 12.5px;
+      margin-bottom: 2px;
+      color: #ffffff;
+    }
+
+    .floating-tooltip span {
+      font-size: 11px;
+      color: #cbd5e1;
+      line-height: 1.35;
+      display: block;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Responsive Mobile Layout */
+    @media (max-width: 860px) {
+      .brand p { display: none; }
+      .main-container {
+        flex-direction: column;
+      }
+      .map-area {
+        height: 52vh;
+        flex: none;
+      }
+      .sidebar {
+        width: 100%;
+        height: 48vh;
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+      }
+      .route-list {
+        max-height: 125px;
+      }
+      .map-legend {
+        bottom: 10px;
+        left: 10px;
+        padding: 6px 10px;
+        font-size: 10.5px;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="3" width="16" height="16" rx="2"/>
+          <path d="M4 11h16"/>
+          <path d="M12 3v8"/>
+          <path d="m8 19-2 3"/>
+          <path d="m18 22-2-3"/>
+          <circle cx="8" cy="15" r="1"/>
+          <circle cx="16" cy="15" r="1"/>
+        </svg>
+      </div>
+      <div>
+        <h1>미국 대륙횡단철도 노선 지도</h1>
+        <p>독립 실행형 벡터 지도 · 암트랙(Amtrak) 및 19세기 역사적 철도망 비교</p>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button id="tab-amtrak" class="tab-btn active" onclick="switchCategory('amtrak')">
+        현재 암트랙 여객 노선 (4개)
+      </button>
+      <button id="tab-historical" class="tab-btn" onclick="switchCategory('historical')">
+        19세기 역사적 횡단철도 (5개)
+      </button>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-outline" onclick="resetView()" title="지도 위치 및 배율 초기화">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
+        전체 지도 보기
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <div class="main-container">
+    
+    <!-- Left / Bottom Control & Detail Sidebar -->
+    <aside class="sidebar">
+      <div class="route-list-section">
+        <div class="section-header">
+          <span id="category-badge" class="badge-title">AMTRAK PASSENGER ROUTES (4개)</span>
+          <button class="text-btn" onclick="showAllRoutes()">모든 노선 켜기</button>
+        </div>
+        <div id="route-list" class="route-list"></div>
+      </div>
+
+      <div id="detail-container" class="detail-container"></div>
+    </aside>
+
+    <!-- Interactive Self-Contained Vector SVG Map -->
+    <main id="map-area" class="map-area">
+      <svg id="us-rail-svg" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <!-- Soft topography gradient for Rocky Mountains -->
+          <linearGradient id="rockyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#e2e8f0" stop-opacity="0.1"/>
+            <stop offset="50%" stop-color="#cbd5e1" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="#e2e8f0" stop-opacity="0.1"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Pan & Zoom Transform Group -->
+        <g id="viewport-group">
+          
+          <!-- Ocean / Geography Labels -->
+          <text x="68" y="340" class="ocean-label" transform="rotate(-68 68,340)">PACIFIC OCEAN (태평양)</text>
+          <text x="920" y="340" class="ocean-label" transform="rotate(-65 920,340)">ATLANTIC OCEAN (대서양)</text>
+          <text x="625" y="555" class="ocean-label">GULF OF MEXICO (멕시코만)</text>
+
+          <!-- Neighboring Landmasses (Canada & Mexico subtle silhouettes) -->
+          <path class="country-neighbor" d="M 110,68 L 885,68 L 885,112 L 835,126 L 780,152 L 725,180 L 665,175 L 595,125 L 515,108 L 315,108 L 138,108 Z" />
+          <path class="country-neighbor" d="M 212,422 L 265,436 L 330,455 L 405,468 L 465,530 L 440,585 L 340,585 L 265,515 L 212,438 Z" />
+
+          <!-- Continental USA (48 States) Crisp Vector Outline -->
+          <path class="us-mainland" d="
+            M 138,108 
+            L 315,108 
+            L 515,108 
+            L 568,112 
+            L 595,125 
+            L 632,148 
+            L 668,142 
+            L 685,165 
+            L 718,178 
+            L 755,168 
+            L 795,152 
+            L 835,134 
+            L 865,102 
+            L 888,118 
+            L 872,158 
+            L 848,176 
+            L 836,204 
+            L 815,232 
+            L 805,264 
+            L 786,296 
+            L 754,335 
+            L 732,374 
+            L 725,418 
+            L 745,475 
+            L 735,492 
+            L 714,474 
+            L 702,432 
+            L 665,428 
+            L 622,438 
+            L 594,444 
+            L 556,442 
+            L 514,458 
+            L 476,494 
+            L 465,528 
+            L 442,522 
+            L 415,474 
+            L 382,456 
+            L 335,454 
+            L 265,436 
+            L 212,422 
+            L 185,395 
+            L 156,356 
+            L 132,305 
+            L 118,248 
+            L 124,185 
+            L 134,132 
+            Z" />
+
+          <!-- Subtle State & Regional Boundaries for Geographical Orientation -->
+          <g class="state-grid">
+            <!-- West Coast & Mountain West -->
+            <path d="M 125,172 L 222,182" /> <!-- WA / OR -->
+            <path d="M 118,238 L 245,245" /> <!-- OR / CA / NV -->
+            <path d="M 222,108 L 222,245" /> <!-- WA-OR / ID -->
+            <path d="M 245,245 L 245,355 L 212,422" /> <!-- NV / CA -->
+            <path d="M 245,265 L 325,265 L 325,355 L 245,355" /> <!-- UT -->
+            <path d="M 245,355 L 325,355 L 325,442" /> <!-- AZ -->
+            <path d="M 268,108 L 268,205 L 355,205 L 355,108" /> <!-- MT -->
+            <path d="M 278,205 L 368,205 L 368,275 L 278,275 Z" /> <!-- WY -->
+            <path d="M 325,275 L 415,275 L 415,355 L 325,355 Z" /> <!-- CO -->
+            <path d="M 325,355 L 408,355 L 408,448 L 325,442 Z" /> <!-- NM -->
+            <!-- Great Plains & Midwest -->
+            <path d="M 355,108 L 445,108 L 445,165 L 355,165 Z" /> <!-- ND -->
+            <path d="M 355,165 L 448,165 L 448,222 L 355,222 Z" /> <!-- SD -->
+            <path d="M 368,222 L 462,222 L 462,278 L 368,278 Z" /> <!-- NE -->
+            <path d="M 415,278 L 495,278 L 495,335 L 415,335 Z" /> <!-- KS -->
+            <path d="M 408,335 L 502,335 L 502,388 L 408,388 Z" /> <!-- OK -->
+            <path d="M 408,388 L 545,388 L 545,445 L 465,528 L 415,474 Z" /> <!-- TX -->
+            <path d="M 445,108 L 518,108 L 518,195 L 448,195" /> <!-- MN -->
+            <path d="M 462,195 L 532,195 L 532,258 L 462,258" /> <!-- IA -->
+            <path d="M 495,258 L 558,258 L 558,338 L 495,338" /> <!-- MO -->
+            <path d="M 502,338 L 558,338 L 558,395 L 502,395" /> <!-- AR -->
+            <path d="M 545,395 L 594,395 L 594,444 L 545,442" /> <!-- LA -->
+            <!-- Great Lakes & East -->
+            <path d="M 518,132 L 575,132 L 575,205 L 532,205" /> <!-- WI -->
+            <path d="M 532,205 L 585,205 L 585,288 L 532,288" /> <!-- IL -->
+            <path d="M 585,205 L 628,205 L 628,278 L 585,278" /> <!-- IN -->
+            <path d="M 628,202 L 682,202 L 682,272 L 628,272" /> <!-- OH -->
+            <path d="M 682,188 L 768,188 L 768,242 L 682,242" /> <!-- PA / NY -->
+            <path d="M 585,278 L 685,278 L 685,322 L 572,322" /> <!-- KY / WV -->
+            <path d="M 565,322 L 675,322 L 675,355 L 558,355" /> <!-- TN -->
+            <path d="M 558,355 L 605,355 L 605,432 L 558,432" /> <!-- MS -->
+            <path d="M 605,355 L 652,355 L 652,430 L 605,430" /> <!-- AL -->
+            <path d="M 652,355 L 712,355 L 712,428 L 652,428" /> <!-- GA -->
+            <path d="M 675,315 L 775,315 L 745,358 L 675,358" /> <!-- NC / SC -->
+            <path d="M 682,242 L 788,242 L 775,315 L 682,315" /> <!-- VA / MD -->
+          </g>
+
+          <!-- Rocky Mountains Belt Shading -->
+          <path d="M 255,115 Q 290,220 335,345 L 375,345 Q 335,220 305,115 Z" fill="url(#rockyGrad)" pointer-events="none" />
+          <text x="292" y="215" class="mountain-label" transform="rotate(66 292,215)">ROCKY MOUNTAINS</text>
+
+          <!-- Mississippi River Vector -->
+          <path class="river-line" d="M 505,132 Q 518,185 536,232 T 556,315 T 552,388 T 582,442" />
+
+          <!-- Great Lakes Stylized Shapes -->
+          <g fill="#dbeafe" stroke="#93c5fd" stroke-width="1">
+            <path d="M 538,118 Q 572,108 598,122 Q 575,134 538,128 Z" /> <!-- Lake Superior -->
+            <path d="M 576,138 Q 592,138 590,196 Q 574,196 576,138 Z" /> <!-- Lake Michigan -->
+            <path d="M 596,138 Q 622,138 625,174 Q 604,178 596,138 Z" /> <!-- Lake Huron -->
+            <path d="M 632,184 Q 664,174 676,184 Q 656,196 632,190 Z" /> <!-- Lake Erie -->
+          </g>
+
+          <!-- Dynamic Railroad Layers Container -->
+          <g id="rail-lines-layer"></g>
+          <g id="rail-stations-layer"></g>
+
+        </g>
+      </svg>
+
+      <!-- Floating Zoom / Pan Controls -->
+      <div class="map-controls">
+        <button class="map-ctrl-btn" onclick="zoomBy(1.25)" title="확대 (+)">+</button>
+        <button class="map-ctrl-btn" onclick="zoomBy(0.8)" title="축소 (-)">−</button>
+        <button class="map-ctrl-btn" onclick="resetView()" title="초기화 (100%)" style="font-size: 13px;">⌂</button>
+      </div>
+
+      <!-- Bottom Legend -->
+      <div class="map-legend">
+        <div class="legend-item">
+          <span style="display:inline-block;width:18px;height:4px;background:#2563eb;border-radius:2px;"></span>
+          <span>선택된 노선 (열차 흐름 표시)</span>
+        </div>
+        <div class="legend-item">
+          <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#fff;border:2.5px solid #0f172a;"></span>
+          <span>주요 거점역 (클릭 시 이동)</span>
+        </div>
+        <div class="legend-item" id="spike-legend" style="display:none;">
+          <span style="color:#d97706;font-weight:800;font-size:13px;">★</span>
+          <span>1869 황금 스파이크 (프로몬터리 서밋)</span>
+        </div>
+        <div class="legend-item" style="color:#64748b;">
+          <span>마우스 휠: 확대/축소 · 드래그: 이동</span>
+        </div>
+      </div>
+
+      <!-- Hover Tooltip -->
+      <div id="map-tooltip" class="floating-tooltip"></div>
+    </main>
+
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. Railroad Routes Data (Coordinates mapped to 1000x620 USA Vector Space)
+    // =========================================================================
+    const railroadData = {
+      amtrak: [
+        {
+          id: 'empire-builder',
+          name: '엠파이어 빌더 (Empire Builder)',
+          englishName: 'Empire Builder · Northern Transcontinental',
+          color: '#2563eb', // Blue
+          operator: '암트랙 (Amtrak)',
+          era: '현행 운행 (1929년 그레이트 노던 철도 계승)',
+          endpoints: '시카고 (IL) ↔ 시애틀 / 포틀랜드 (WA / OR)',
+          distance: '약 3,550 km (2,206 마일)',
+          duration: '약 46시간 (2박 3일)',
+          summary: '미국 최북단 대평원과 로키산맥의 글레이셔 국립공원을 가로지르는 장거리 여객 열차입니다. 워싱턴주 스포캔에서 시애틀행(북쪽)과 포틀랜드행(남쪽) 두 갈래로 분리되어 운행합니다.',
+          highlights: [
+            '글레이셔 국립공원(Glacier National Park) 남쪽 경계를 통과하는 웅장한 설산 풍경',
+            '미시시피강 상류 및 노스다코타 광활한 대평원 횡단',
+            '스포캔(Spokane)에서 시애틀 방면과 컬럼비아강 협곡을 따라가는 포틀랜드 방면으로 분기'
+          ],
+          segments: [
+            [
+              { name: '시카고', fullName: '시카고 (Chicago Union Station)', x: 572, y: 206, major: true, desc: '미국 중서부 철도 허브 출발 기점' },
+              { name: '밀워키', fullName: '밀워키 (Milwaukee)', x: 566, y: 184, major: false },
+              { name: '세인트폴', fullName: '세인트폴 / 미니애폴리스 (St. Paul)', x: 496, y: 162, major: true, desc: '트윈 시티즈(Twin Cities) 주요 거점역' },
+              { name: '파고', fullName: '파고 (Fargo, ND)', x: 444, y: 146, major: false },
+              { name: '마이놋', fullName: '마이놋 (Minot, ND)', x: 396, y: 126, major: true, desc: '노스다코타 북서부 승무원 교대 역' },
+              { name: '글레이셔 국립공원', fullName: '글레이셔 국립공원 (Glacier Park, MT)', x: 278, y: 120, major: true, desc: '로키산맥의 비경 글레이셔 국립공원 정차' },
+              { name: '스포캔', fullName: '스포캔 (Spokane, WA)', x: 215, y: 136, major: true, desc: '시애틀행과 포틀랜드행 열차가 분리·결합되는 분기점' },
+              { name: '시애틀', fullName: '시애틀 (King Street Station, WA)', x: 144, y: 126, major: true, desc: '태평양 연안 북부 종착역' }
+            ],
+            [
+              { name: '스포캔', fullName: '스포캔 (Spokane, WA)', x: 215, y: 136, major: false },
+              { name: '패스코', fullName: '패스코 (Pasco, WA)', x: 192, y: 158, major: false },
+              { name: '포틀랜드', fullName: '포틀랜드 (Portland Union Station, OR)', x: 136, y: 168, major: true, desc: '컬럼비아강 협곡을 거쳐 도착하는 남쪽 지선 종착역' }
+            ]
+          ]
+        },
+        {
+          id: 'california-zephyr',
+          name: '캘리포니아 제퍼 (California Zephyr)',
+          englishName: 'California Zephyr · Central Transcontinental',
+          color: '#059669', // Emerald / Teal
+          operator: '암트랙 (Amtrak)',
+          era: '현행 운행 (1949년 첫 운행)',
+          endpoints: '시카고 (IL) ↔ 에머리빌 / 샌프란시스코 (CA)',
+          distance: '약 3,924 km (2,438 마일)',
+          duration: '약 51시간 20분 (2박 3일)',
+          summary: '북미에서 가장 아름다운 기차 여행 노선으로 꼽히며, 로키산맥의 깊은 협곡과 시에라네바다 산맥을 넘어 샌프란시스코 베이까지 연결됩니다.',
+          highlights: [
+            '콜로라도강 상류 협곡(Glenwood Canyon)과 모팻 터널 통과',
+            '1869년 최초의 대륙횡단철도 핵심 구간(유타~네바다~캘리포니아) 계승',
+            '리노와 타호 호수 인근을 지나 시에라네바다 산맥을 넘어 태평양 연안 도착'
+          ],
+          segments: [
+            [
+              { name: '시카고', fullName: '시카고 (Chicago Union Station)', x: 572, y: 206, major: true, desc: '동부 출발 기점' },
+              { name: '오마하', fullName: '오마하 (Omaha, NE)', x: 460, y: 242, major: true, desc: '미주리강 연안의 역사적 철도 거점' },
+              { name: '덴버', fullName: '덴버 (Denver Union Station, CO)', x: 368, y: 292, major: true, desc: '로키산맥 등반이 시작되는 마일 하이 시티' },
+              { name: '글렌우드 스프링스', fullName: '글렌우드 스프링스 (Glenwood Springs)', x: 334, y: 298, major: false },
+              { name: '솔트레이크시티', fullName: '솔트레이크시티 (Salt Lake City, UT)', x: 274, y: 274, major: true, desc: '유타주 주도 및 그레이트솔트호 인근 거점' },
+              { name: '엘코', fullName: '엘코 (Elko, NV)', x: 224, y: 268, major: false },
+              { name: '리노', fullName: '리노 (Reno, NV)', x: 176, y: 274, major: true, desc: '시에라네바다 산맥 동쪽 관문' },
+              { name: '새크라멘토', fullName: '새크라멘토 (Sacramento, CA)', x: 146, y: 286, major: true, desc: '캘리포니아 주도 및 최초 횡단철도 서부 기점' },
+              { name: '에머리빌 (샌프란시스코)', fullName: '에머리빌 / 샌프란시스코 (Emeryville, CA)', x: 130, y: 296, major: true, desc: '샌프란시스코 베이 지역 서부 종착역' }
+            ]
+          ]
+        },
+        {
+          id: 'southwest-chief',
+          name: '사우스웨스트 치프 (Southwest Chief)',
+          englishName: 'Southwest Chief · Southwestern Route',
+          color: '#ea580c', // Orange
+          operator: '암트랙 (Amtrak)',
+          era: '현행 운행 (산타페 철도 슈퍼 치프 계승)',
+          endpoints: '시카고 (IL) ↔ 로스앤젤레스 (CA)',
+          distance: '약 3,645 km (2,265 마일)',
+          duration: '약 43시간 (2박 3일)',
+          summary: '과거 전설적인 호화 열차였던 산타페 철도의 "슈퍼 치프" 노선을 계승하여, 미국 남서부 사막과 붉은 협곡, 66번 국도(Route 66)의 정취를 따라 달립니다.',
+          highlights: [
+            '과거 산타페 트레일 및 구 66번 국도와 나란히 달리는 남서부 종단',
+            '뉴멕시코주 라톤 패스 고갯길과 앨버커키 통과',
+            '애리조나주 플래그스태프(그랜드 캐니언 관문) 및 모하비 사막 횡단'
+          ],
+          segments: [
+            [
+              { name: '시카고', fullName: '시카고 (Chicago Union Station)', x: 572, y: 206, major: true, desc: '동부 출발 기점' },
+              { name: '캔자스시티', fullName: '캔자스시티 (Kansas City, MO)', x: 494, y: 286, major: true, desc: '미주리·캔자스 경계의 대형 철도 허브' },
+              { name: '도지시티', fullName: '도지시티 (Dodge City, KS)', x: 432, y: 314, major: false },
+              { name: '앨버커키', fullName: '앨버커키 (Albuquerque, NM)', x: 356, y: 374, major: true, desc: '뉴멕시코주 최대 도시 및 남서부 핵심 정차역' },
+              { name: '플래그스태프', fullName: '플래그스태프 (Flagstaff, AZ)', x: 286, y: 376, major: true, desc: '그랜드 캐니언 국립공원 연계 관문' },
+              { name: '바스토', fullName: '바스토 (Barstow, CA)', x: 214, y: 382, major: false },
+              { name: '로스앤젤레스', fullName: '로스앤젤레스 (LA Union Station, CA)', x: 184, y: 394, major: true, desc: '남부 캘리포니아 태평양 연안 종착역' }
+            ]
+          ]
+        },
+        {
+          id: 'sunset-limited',
+          name: '선셋 리미티드 (Sunset Limited)',
+          englishName: 'Sunset Limited · Southernmost Route',
+          color: '#9333ea', // Purple
+          operator: '암트랙 (Amtrak)',
+          era: '현행 운행 (1894년 개통, 미국 최장수 명칭 열차)',
+          endpoints: '뉴올리언스 (LA) ↔ 로스앤젤레스 (CA)',
+          distance: '약 3,211 km (1,995 마일)',
+          duration: '약 48시간 (주 3회 운행)',
+          summary: '미국에서 가장 오래된 이름을 유지하고 있는 열차로, 루이지애나의 늪지대에서 출발해 광활한 텍사스와 멕시코 국경 지대 사막을 가로질러 로스앤젤레스까지 이어집니다.',
+          highlights: [
+            '뉴올리언스 미시시피강 하구에서 로스앤젤레스까지 최남단 횡단',
+            '광활한 텍사스주(휴스턴~샌안토니오~엘패소)를 동서로 관통',
+            '소노라 사막과 거대한 사와로 선인장 지대(투손·피닉스 인근) 통과'
+          ],
+          segments: [
+            [
+              { name: '뉴올리언스', fullName: '뉴올리언스 (Union Passenger Terminal, LA)', x: 584, y: 440, major: true, desc: '멕시코만 연안 동부 출발 기점' },
+              { name: '휴스턴', fullName: '휴스턴 (Houston, TX)', x: 518, y: 454, major: true, desc: '텍사스주 최대 도시 정차역' },
+              { name: '샌안토니오', fullName: '샌안토니오 (San Antonio, TX)', x: 478, y: 466, major: true, desc: '시카고발 텍사스 이글 객차 연결 지점' },
+              { name: '엘패소', fullName: '엘패소 (El Paso, TX)', x: 374, y: 438, major: true, desc: '텍사스 서단 멕시코 국경 도시' },
+              { name: '투손', fullName: '투손 (Tucson, AZ)', x: 298, y: 426, major: true, desc: '애리조나 남부 소노라 사막 도시' },
+              { name: '마리코파 (피닉스)', fullName: '마리코파 / 피닉스 (Maricopa, AZ)', x: 276, y: 412, major: false },
+              { name: '로스앤젤레스', fullName: '로스앤젤레스 (LA Union Station, CA)', x: 184, y: 394, major: true, desc: '태평양 연안 서부 종착역' }
+            ]
+          ]
+        }
+      ],
+
+      historical: [
+        {
+          id: 'first-transcontinental',
+          name: '1869 퍼시픽 철도 (최초의 대륙횡단철도)',
+          englishName: 'First Transcontinental Railroad (UP + CP)',
+          color: '#d97706', // Golden Amber
+          operator: '유니언 퍼시픽 (UP) + 센트럴 퍼시픽 (CP)',
+          era: '1869년 5월 10일 완공',
+          endpoints: '네브래스카주 오마하 ↔ 캘리포니아주 새크라멘토',
+          distance: '약 3,077 km (1,912 마일)',
+          duration: '기존 6개월 마차 이동을 약 1주일로 단축',
+          summary: '동쪽의 유니언 퍼시픽과 서쪽의 센트럴 퍼시픽이 유타주 프로몬터리 서밋에서 만나 "황금 스파이크(Golden Spike)"를 박으며 완성한 미국 최초의 대륙횡단철도입니다.',
+          highlights: [
+            '1869년 5월 10일 유타주 프로몬터리 서밋에서 양사 선로 극적 연결',
+            '아일랜드계 이민자(동부)와 중국계 이민자(서부 시에라네바다 난공사) 노동자의 헌신으로 건설',
+            '미국 서부 개척과 단일 국가 경제권 형성의 결정적 전환점 마련'
+          ],
+          segments: [
+            [
+              { name: '오마하', fullName: '오마하 (Omaha, NE)', x: 460, y: 242, major: true, desc: '유니언 퍼시픽(UP) 서진 건설 출발 기점' },
+              { name: '샤이엔', fullName: '샤이엔 (Cheyenne, WY)', x: 368, y: 266, major: true, desc: '와이오밍주 주요 거점 및 로키산맥 통과 전진기지' },
+              { name: '오그던', fullName: '오그던 (Ogden, UT)', x: 276, y: 262, major: false },
+              { name: '프로몬터리 서밋 ★', fullName: '프로몬터리 서밋 (Promontory Summit, UT)', x: 264, y: 252, major: true, isGoldenSpike: true, desc: '★ 1869년 5월 10일 황금 스파이크(Golden Spike) 연결 지점' },
+              { name: '리노', fullName: '리노 (Reno, NV)', x: 176, y: 274, major: true, desc: '시에라네바다 산맥 동쪽 관문' },
+              { name: '새크라멘토', fullName: '새크라멘토 (Sacramento, CA)', x: 146, y: 286, major: true, desc: '센트럴 퍼시픽(CP) 동진 건설 출발 기점' }
+            ]
+          ]
+        },
+        {
+          id: 'atsf-railroad',
+          name: '1881 애치슨, 토피카 & 산타페 철도 (ATSF)',
+          englishName: 'Atchison, Topeka and Santa Fe Railway',
+          color: '#ea580c', // Orange
+          operator: 'ATSF (현 BNSF 철도의 전신)',
+          era: '1881년 연결 (1885년 직통선 완성)',
+          endpoints: '캔자스시티 (MO/KS) ↔ 로스앤젤레스 (CA)',
+          distance: '약 3,500 km',
+          duration: '남서부 사막 지대 개척의 대동맥',
+          summary: '캔자스주에서 시작해 남서부 사막과 협곡 지대를 가로질러 캘리포니아 로스앤젤레스까지 연결된 철도로, 남부 캘리포니아의 폭발적 인구 유입을 이끌었습니다.',
+          highlights: [
+            '1881년 뉴멕시코 데밍에서 서던 퍼시픽과 연결되며 제2의 대륙횡단 루트 형성',
+            '1885년 자체 노선 확보로 캔자스시티·시카고에서 로스앤젤레스까지 직통 운행 달성',
+            '프레드 하비(Fred Harvey) 역 식당과 관광 사업을 통해 남서부 문화 대중화'
+          ],
+          segments: [
+            [
+              { name: '캔자스시티', fullName: '캔자스시티 (Kansas City, MO)', x: 494, y: 286, major: true, desc: '동부 주요 기점' },
+              { name: '도지시티', fullName: '도지시티 (Dodge City, KS)', x: 432, y: 314, major: false },
+              { name: '앨버커키', fullName: '앨버커키 (Albuquerque, NM)', x: 356, y: 374, major: true, desc: '뉴멕시코 중심 거점' },
+              { name: '니들스', fullName: '니들스 (Needles, CA)', x: 244, y: 382, major: true, desc: '콜로라도강 횡단 및 모하비 사막 관문' },
+              { name: '로스앤젤레스', fullName: '로스앤젤레스 (Los Angeles, CA)', x: 184, y: 394, major: true, desc: '남부 캘리포니아 종착역' }
+            ]
+          ]
+        },
+        {
+          id: 'southern-pacific',
+          name: '1883 서던 퍼시픽 철도 (선셋 루트)',
+          englishName: 'Southern Pacific Railroad (Sunset Route)',
+          color: '#9333ea', // Purple
+          operator: '서던 퍼시픽 (현 유니언 퍼시픽에 합병)',
+          era: '1883년 1월 개통',
+          endpoints: '루이지애나주 뉴올리언스 ↔ 로스앤젤레스 (CA)',
+          distance: '약 3,900 km (새크라멘토 연장 포함)',
+          duration: '눈이 내리지 않는 연중 안정적 최남단 횡단 노선',
+          summary: '겨울철 폭설로 운행이 중단되던 북부·중부 노선과 달리, 1년 내내 기후 영향을 덜 받는 최남단 국경 지대를 가로질러 멕시코만과 태평양을 연결했습니다.',
+          highlights: [
+            '1883년 텍사스 페코스강 인근에서 은 스파이크(Silver Spike)를 박으며 개통',
+            '뉴올리언스~엘패소~유마~로스앤젤레스를 잇는 거대 남부 네트워크 구축',
+            '오늘날 암트랙 "선셋 리미티드" 및 유니언 퍼시픽 남부 핵심 간선으로 활용'
+          ],
+          segments: [
+            [
+              { name: '뉴올리언스', fullName: '뉴올리언스 (New Orleans, LA)', x: 584, y: 440, major: true, desc: '멕시코만 연안 동부 출발 기점' },
+              { name: '휴스턴', fullName: '휴스턴 (Houston, TX)', x: 518, y: 454, major: false },
+              { name: '샌안토니오', fullName: '샌안토니오 (San Antonio, TX)', x: 478, y: 466, major: false },
+              { name: '엘패소', fullName: '엘패소 (El Paso, TX)', x: 374, y: 438, major: true, desc: '리오그란데강 국경 통과 핵심 거점' },
+              { name: '유마', fullName: '유마 (Yuma, AZ)', x: 242, y: 416, major: true, desc: '콜로라도강 하류 사막 통과 거점' },
+              { name: '로스앤젤레스', fullName: '로스앤젤레스 (Los Angeles, CA)', x: 184, y: 394, major: true, desc: '태평양 연안 서부 종착역' }
+            ]
+          ]
+        },
+        {
+          id: 'northern-pacific',
+          name: '1883 노던 퍼시픽 철도 (Northern Pacific)',
+          englishName: 'Northern Pacific Railway',
+          color: '#0d9488', // Teal
+          operator: '노던 퍼시픽 (현 BNSF 철도에 통합)',
+          era: '1883년 9월 개통',
+          endpoints: '미네소타주 덜루스/세인트폴 ↔ 워싱턴주 타코마/시애틀',
+          distance: '약 3,400 km',
+          duration: '북부 대평원과 태평양 북서부 개척 주도',
+          summary: '오대호(슈피리어호)의 덜루스와 세인트폴에서 출발해 노스다코타와 몬태나의 옐로스톤강 계곡을 따라 로키산맥을 넘어 퓨젓사운드만(타코마·시애틀)에 도달한 최초의 북부 횡단철도입니다.',
+          highlights: [
+            '1883년 9월 몬태나주 골드 크릭(Gold Creek)에서 마지막 스파이크를 박으며 완공',
+            '옐로스톤 국립공원 관광을 적극 홍보하며 "옐로스톤 파크 라인"으로 불림',
+            '미네소타, 노스다코타, 몬태나, 워싱턴주의 대규모 이민자 정착 촉진'
+          ],
+          segments: [
+            [
+              { name: '덜루스 / 세인트폴', fullName: '덜루스 / 세인트폴 (Duluth / St. Paul, MN)', x: 504, y: 152, major: true, desc: '오대호(슈피리어호) 및 미시시피강 상류 동부 기점' },
+              { name: '비즈마크', fullName: '비즈마크 (Bismarck, ND)', x: 398, y: 152, major: true, desc: '노스다코타주 주도 및 미주리강 횡단 거점' },
+              { name: '빌링스', fullName: '빌링스 (Billings, MT)', x: 318, y: 174, major: true, desc: '몬태나 남부 옐로스톤강 연안 중심지' },
+              { name: '스포캔', fullName: '스포캔 (Spokane, WA)', x: 215, y: 136, major: true, desc: '워싱턴주 동부 철도 허브' },
+              { name: '타코마 / 시애틀', fullName: '타코마 / 시애틀 (Tacoma / Seattle, WA)', x: 144, y: 134, major: true, desc: '퓨젓사운드만 태평양 연안 종착지' }
+            ]
+          ]
+        },
+        {
+          id: 'great-northern',
+          name: '1893 그레이트 노던 철도 (Great Northern)',
+          englishName: 'Great Northern Railway',
+          color: '#1d4ed8', // Indigo / Deep Blue
+          operator: '그레이트 노던 (제임스 J. 힐 설립, 현 BNSF)',
+          era: '1893년 개통',
+          endpoints: '미네소타주 세인트폴 ↔ 워싱턴주 시애틀',
+          distance: '약 2,900 km (가장 짧고 완만한 북부 경로)',
+          duration: '정부 보조금 없이 민간 자본만으로 건설된 최북단 철도',
+          summary: '"제국의 건설자(Empire Builder)"로 불린 제임스 J. 힐(James J. Hill)이 연방 정부의 토지 보조금 없이 철저한 수익성과 완만한 경사 설계를 바탕으로 건설한 최북단 대륙횡단철도입니다.',
+          highlights: [
+            '정부 토지 하사(Land Grant) 없이 순수 민간 자본으로 파산 없이 완공된 유일한 횡단철도',
+            '마리아스 패스(Marias Pass)를 발견하여 로키산맥에서 가장 낮은 고도로 횡단',
+            '오늘날 암트랙 "엠파이어 빌더"가 이 노선의 선로를 그대로 사용 중'
+          ],
+          segments: [
+            [
+              { name: '세인트폴', fullName: '세인트폴 (St. Paul, MN)', x: 496, y: 162, major: true, desc: '동부 출발 기점' },
+              { name: '그랜드포크스', fullName: '그랜드포크스 (Grand Forks, ND)', x: 444, y: 124, major: true, desc: '레드강 계곡 농산물 수송 거점' },
+              { name: '하브르', fullName: '하브르 (Havre, MT)', x: 326, y: 122, major: true, desc: '몬태나 북부 하이-라인(Hi-Line) 중심지' },
+              { name: '스포캔', fullName: '스포캔 (Spokane, WA)', x: 215, y: 136, major: true, desc: '내륙 북서부 허브' },
+              { name: '시애틀', fullName: '시애틀 (Seattle, WA)', x: 144, y: 126, major: true, desc: '태평양 연안 서부 종착역' }
+            ]
+          ]
+        }
+      ]
+    };
+
+    // =========================================================================
+    // 2. State Management
+    // =========================================================================
+    let currentCategory = 'amtrak';
+    let selectedRouteId = 'empire-builder';
+    const visibleRoutes = new Set();
+    Object.values(railroadData).flat().forEach(r => visibleRoutes.add(r.id));
+
+    // SVG Pan & Zoom State
+    let transform = { x: 0, y: 0, scale: 1 };
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
+
+    const svgEl = document.getElementById('us-rail-svg');
+    const viewportGroup = document.getElementById('viewport-group');
+    const linesLayer = document.getElementById('rail-lines-layer');
+    const stationsLayer = document.getElementById('rail-stations-layer');
+    const tooltipEl = document.getElementById('map-tooltip');
+    const mapArea = document.getElementById('map-area');
+
+    // =========================================================================
+    // 3. Render SVG Map Polylines & Stations
+    // =========================================================================
+    function createSvgElement(tag, attrs = {}) {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        el.setAttribute(k, v);
+      }
+      return el;
+    }
+
+    function renderMap() {
+      linesLayer.innerHTML = '';
+      stationsLayer.innerHTML = '';
+
+      const routes = railroadData[currentCategory];
+      document.getElementById('spike-legend').style.display =
+        currentCategory === 'historical' ? 'flex' : 'none';
+
+      // Sort routes so the selected route is drawn last (on top of other lines)
+      const sortedRoutes = [...routes].sort((a, b) => {
+        if (a.id === selectedRouteId) return 1;
+        if (b.id === selectedRouteId) return -1;
+        return 0;
+      });
+
+      const renderedLabels = []; // Prevent overlapping station text labels
+
+      sortedRoutes.forEach(route => {
+        if (!visibleRoutes.has(route.id)) return;
+
+        const isSelected = route.id === selectedRouteId;
+        const opacity = isSelected ? 1 : 0.35;
+        const strokeWidth = isSelected ? 5.2 : 3.2;
+
+        route.segments.forEach(segment => {
+          const pointsStr = segment.map(pt => `${pt.x},${pt.y}`).join(' ');
+
+          // 1. White outer casing line for crisp separation
+          const casing = createSvgElement('polyline', {
+            points: pointsStr,
+            class: 'rail-casing',
+            'stroke-width': isSelected ? 8.5 : 5.5,
+            opacity: isSelected ? 0.95 : 0.65
+          });
+          linesLayer.appendChild(casing);
+
+          // 2. Colored route line
+          const polyline = createSvgElement('polyline', {
+            points: pointsStr,
+            class: 'rail-path',
+            stroke: route.color,
+            'stroke-width': strokeWidth,
+            opacity: opacity
+          });
+
+          // Click & Hover interactions on line
+          polyline.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectRoute(route.id);
+          });
+          polyline.addEventListener('mousemove', (e) => {
+            showTooltip(e, route.name, route.endpoints);
+          });
+          polyline.addEventListener('mouseleave', hideTooltip);
+
+          linesLayer.appendChild(polyline);
+
+          // 3. Animated train motion overlay on selected route
+          if (isSelected) {
+            const flowOverlay = createSvgElement('polyline', {
+              points: pointsStr,
+              class: 'train-flow-overlay'
+            });
+            linesLayer.appendChild(flowOverlay);
+          }
+
+          // 4. Station Nodes & Labels
+          segment.forEach(stop => {
+            if (!stop.major && !isSelected) return;
+
+            const stationGroup = createSvgElement('g', {
+              opacity: isSelected ? 1 : 0.55
+            });
+
+            if (stop.isGoldenSpike) {
+              // Pulsing ring for 1869 Promontory Summit
+              const ring = createSvgElement('circle', {
+                cx: stop.x,
+                cy: stop.y,
+                r: 8,
+                class: 'spike-ring'
+              });
+              stationGroup.appendChild(ring);
+
+              const starCircle = createSvgElement('circle', {
+                cx: stop.x,
+                cy: stop.y,
+                r: 7,
+                fill: '#f59e0b',
+                stroke: '#ffffff',
+                'stroke-width': 2,
+                class: 'station-dot'
+              });
+              stationGroup.appendChild(starCircle);
+
+              const starText = createSvgElement('text', {
+                x: stop.x,
+                y: stop.y + 3.5,
+                'text-anchor': 'middle',
+                fill: '#ffffff',
+                'font-size': '10px',
+                'font-weight': 'bold',
+                'pointer-events': 'none'
+              });
+              starText.textContent = '★';
+              stationGroup.appendChild(starText);
+            } else {
+              const dot = createSvgElement('circle', {
+                cx: stop.x,
+                cy: stop.y,
+                r: stop.major ? (isSelected ? 5.2 : 3.8) : 3.4,
+                fill: stop.major ? '#ffffff' : route.color,
+                stroke: route.color,
+                'stroke-width': stop.major ? 2.6 : 1.5,
+                class: 'station-dot'
+              });
+              stationGroup.appendChild(dot);
+            }
+
+            // Tooltip & click on station
+            stationGroup.addEventListener('click', (e) => {
+              e.stopPropagation();
+              selectRoute(route.id);
+              focusPoint(stop.x, stop.y, 1.8);
+            });
+            stationGroup.addEventListener('mousemove', (e) => {
+              showTooltip(e, stop.fullName, stop.desc || route.name);
+            });
+            stationGroup.addEventListener('mouseleave', hideTooltip);
+
+            stationsLayer.appendChild(stationGroup);
+
+            // Render text label if major stop (avoid crowding)
+            if (stop.major) {
+              const isDuplicate = renderedLabels.some(
+                l => Math.hypot(l.x - stop.x, l.y - stop.y) < 16 && l.name === stop.name
+              );
+              if (!isDuplicate || isSelected) {
+                renderedLabels.push({ x: stop.x, y: stop.y, name: stop.name });
+                renderStationLabel(stop, isSelected);
+              }
+            }
+          });
+        });
+      });
+    }
+
+    function renderStationLabel(stop, isSelected) {
+      // Offset adjustments for coastal/crowded cities so text stays clean
+      let dx = 0;
+      let dy = -10;
+      let anchor = 'middle';
+
+      if (stop.name.includes('시애틀') || stop.name.includes('타코마') || stop.name.includes('포틀랜드') || stop.name.includes('에머리빌') || stop.name.includes('새크라멘토') || stop.name.includes('로스앤젤레스')) {
+        dx = -8;
+        dy = 3;
+        anchor = 'end';
+      } else if (stop.name.includes('시카고') || stop.name.includes('뉴올리언스')) {
+        dx = 8;
+        dy = 4;
+        anchor = 'start';
+      } else if (stop.name.includes('프로몬터리')) {
+        dy = -12;
+      }
+
+      const labelText = createSvgElement('text', {
+        x: stop.x + dx,
+        y: stop.y + dy,
+        'text-anchor': anchor,
+        class: `station-label ${isSelected ? '' : 'minor'}`,
+        opacity: isSelected ? 1 : 0.72
+      });
+      labelText.textContent = stop.name;
+
+      // White halo stroke behind text for maximum legibility over lines
+      const haloText = createSvgElement('text', {
+        x: stop.x + dx,
+        y: stop.y + dy,
+        'text-anchor': anchor,
+        class: `station-label ${isSelected ? '' : 'minor'}`,
+        stroke: '#ffffff',
+        'stroke-width': 3.5,
+        'stroke-linejoin': 'round',
+        opacity: isSelected ? 0.92 : 0.65
+      });
+      haloText.textContent = stop.name;
+
+      stationsLayer.appendChild(haloText);
+      stationsLayer.appendChild(labelText);
+    }
+
+    // =========================================================================
+    // 4. Sidebar List & Detail Card Rendering
+    // =========================================================================
+    function renderRouteList() {
+      const listEl = document.getElementById('route-list');
+      const routes = railroadData[currentCategory];
+
+      listEl.innerHTML = routes.map(route => {
+        const isSelected = route.id === selectedRouteId;
+        const isChecked = visibleRoutes.has(route.id);
+
+        return `
+          <div class="route-item ${isSelected ? 'selected' : ''}" onclick="selectRoute('${route.id}')">
+            <div class="route-item-left">
+              <span class="color-dot" style="background-color: ${route.color};"></span>
+              <div class="route-item-info">
+                <div class="route-item-title">${route.name}</div>
+                <div class="route-item-sub">${route.endpoints}</div>
+              </div>
+            </div>
+            <label class="switch" onclick="event.stopPropagation()" title="지도에서 노선 켜기/끄기">
+              <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleRoute('${route.id}', this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDetailCard() {
+      const container = document.getElementById('detail-container');
+      const route = railroadData[currentCategory].find(r => r.id === selectedRouteId);
+      if (!route) return;
+
+      // Unique ordered stops
+      const stops = [];
+      const seen = new Set();
+      route.segments.forEach(seg => {
+        seg.forEach(st => {
+          if (!seen.has(st.fullName)) {
+            seen.add(st.fullName);
+            stops.push(st);
+          }
+        });
+      });
+
+      container.innerHTML = `
+        <div class="detail-header">
+          <div class="detail-eng">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${route.color};"></span>
+            <span>${route.englishName}</span>
+          </div>
+          <h2 class="detail-title">${route.name}</h2>
+        </div>
+
+        <div class="meta-grid">
+          <div class="meta-box">
+            <div class="meta-label">운영사 / 건설 주체</div>
+            <div class="meta-val">${route.operator}</div>
+          </div>
+          <div class="meta-box">
+            <div class="meta-label">운행 시기 / 개통 연도</div>
+            <div class="meta-val">${route.era}</div>
+          </div>
+          <div class="meta-box">
+            <div class="meta-label">총 연장 거리</div>
+            <div class="meta-val">${route.distance}</div>
+          </div>
+          <div class="meta-box">
+            <div class="meta-label">소요 시간 / 역사적 의의</div>
+            <div class="meta-val">${route.duration}</div>
+          </div>
+        </div>
+
+        <div class="summary-box">${route.summary}</div>
+
+        <div class="sub-heading">
+          <span>핵심 경유지 순서 (동부 → 서부)</span>
+          <span style="font-size:10.5px;color:#2563eb;font-weight:600;">클릭 시 해당 역 확대</span>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-line" style="background-color: ${route.color};"></div>
+          ${stops.map(st => `
+            <div class="timeline-item" onclick="focusPoint(${st.x}, ${st.y}, 1.9)">
+              <span class="timeline-dot" style="border-color: ${st.isGoldenSpike ? '#f59e0b' : route.color};"></span>
+              <div class="timeline-title">${st.fullName}</div>
+              ${st.desc ? `<div class="timeline-desc">${st.desc}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="sub-heading">
+          <span>노선 특징 및 역사적 배경</span>
+        </div>
+        <ul class="highlights-list">
+          ${route.highlights.map(h => `
+            <li>
+              <span class="bullet" style="background-color: ${route.color};"></span>
+              <span>${h}</span>
+            </li>
+          `).join('')}
+        </ul>
+      `;
+    }
+
+    // =========================================================================
+    // 5. User Interactions (Tabs, Selection, Zoom & Pan)
+    // =========================================================================
+    function switchCategory(category) {
+      currentCategory = category;
+
+      const tabAmtrak = document.getElementById('tab-amtrak');
+      const tabHistorical = document.getElementById('tab-historical');
+      const badge = document.getElementById('category-badge');
+
+      if (category === 'amtrak') {
+        tabAmtrak.classList.add('active');
+        tabHistorical.classList.remove('active');
+        badge.textContent = 'AMTRAK PASSENGER ROUTES (4개)';
+        badge.style.color = '#2563eb';
+      } else {
+        tabHistorical.classList.add('active');
+        tabAmtrak.classList.remove('active');
+        badge.textContent = '19TH CENTURY HISTORICAL RAILROADS (5개)';
+        badge.style.color = '#d97706';
+      }
+
+      selectedRouteId = railroadData[category][0].id;
+      railroadData[category].forEach(r => visibleRoutes.add(r.id));
+
+      renderAll();
+    }
+
+    function selectRoute(routeId) {
+      selectedRouteId = routeId;
+      visibleRoutes.add(routeId);
+      renderAll();
+    }
+
+    function toggleRoute(routeId, checked) {
+      if (checked) {
+        visibleRoutes.add(routeId);
+      } else {
+        visibleRoutes.delete(routeId);
+      }
+      renderMap();
+    }
+
+    function showAllRoutes() {
+      railroadData[currentCategory].forEach(r => visibleRoutes.add(r.id));
+      renderAll();
+    }
+
+    function renderAll() {
+      renderRouteList();
+      renderDetailCard();
+      renderMap();
+    }
+
+    // Tooltip helpers
+    function showTooltip(e, title, subtitle) {
+      const rect = mapArea.getBoundingClientRect();
+      const x = e.clientX - rect.left + 14;
+      const y = e.clientY - rect.top - 12;
+
+      tooltipEl.innerHTML = `<strong>${title}</strong><span>${subtitle}</span>`;
+      tooltipEl.style.left = `${Math.min(x, rect.width - 250)}px`;
+      tooltipEl.style.top = `${Math.max(10, y)}px`;
+      tooltipEl.style.opacity = '1';
+    }
+
+    function hideTooltip() {
+      tooltipEl.style.opacity = '0';
+    }
+
+    // Pan & Zoom Logic for SVG
+    function applyTransform() {
+      viewportGroup.setAttribute(
+        'transform',
+        `translate(${transform.x}, ${transform.y}) scale(${transform.scale})`
+      );
+    }
+
+    function zoomBy(factor) {
+      const newScale = Math.min(Math.max(transform.scale * factor, 0.85), 4.5);
+      const centerX = 500;
+      const centerY = 310;
+
+      transform.x = centerX - (centerX - transform.x) * (newScale / transform.scale);
+      transform.y = centerY - (centerY - transform.y) * (newScale / transform.scale);
+      transform.scale = newScale;
+      applyTransform();
+    }
+
+    function focusPoint(svgX, svgY, targetScale = 1.8) {
+      transform.scale = targetScale;
+      transform.x = 500 - svgX * targetScale;
+      transform.y = 310 - svgY * targetScale;
+      applyTransform();
+    }
+
+    function resetView() {
+      transform = { x: 0, y: 0, scale: 1 };
+      applyTransform();
+    }
+
+    // Mouse Wheel Zoom
+    mapArea.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.15 : 0.87;
+      zoomBy(factor);
+    }, { passive: false });
+
+    // Mouse & Touch Drag Panning
+    mapArea.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.map-controls') || e.target.closest('.map-legend')) return;
+      isDragging = true;
+      dragStart = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+      mapArea.setPointerCapture(e.pointerId);
+    });
+
+    mapArea.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      // Convert screen pixel delta into SVG viewBox coordinate units
+      const rect = svgEl.getBoundingClientRect();
+      const scaleRatio = 1000 / rect.width;
+      transform.x = e.clientX - dragStart.x;
+      transform.y = e.clientY - dragStart.y;
+      // Smooth clamping
+      transform.x = Math.max(-700, Math.min(700, transform.x));
+      transform.y = Math.max(-450, Math.min(450, transform.y));
+      applyTransform();
+    });
+
+    mapArea.addEventListener('pointerup', (e) => {
+      isDragging = false;
+      if (mapArea.hasPointerCapture(e.pointerId)) {
+        mapArea.releasePointerCapture(e.pointerId);
+      }
+    });
+
+    // Initialize Application
+    window.addEventListener('DOMContentLoaded', () => {
+      renderAll();
+    });
+  </script>
+</body>
+</html>
